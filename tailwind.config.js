@@ -2,7 +2,10 @@ module.exports = {
   purge: ["./src/**/*.js", "./public/index.html"],
   darkMode: false, // or 'media' or 'class'
   theme: {
-    extend: {},
+    fontFamily: {
+      serif: ["PT Serif", "serif"],
+      mono: ["Menlo", "monospace"],
+    },
   },
   variants: {
     extend: {},

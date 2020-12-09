@@ -112,12 +112,6 @@ function createSnapshot(t, scope) {
 }
 
 function createSnapshotImport(t) {
-  /* import __snap from '../lib/snapshot' */
-  /* return t.importDeclaration(
-    [t.importDefaultSpecifier(t.identifier("__snap"))],
-    t.stringLiteral("../../lib/snapshot")
-  ); */
-
   /* const __snap = require("snapshot") */
   return t.variableDeclaration("const", [
     t.variableDeclarator(

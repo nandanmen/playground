@@ -3,8 +3,9 @@ import AceEditor from "react-ace";
 import * as babel from "@babel/core";
 
 import "ace-builds/src-noconflict/mode-javascript";
-import "ace-builds/src-noconflict/theme-github";
+import "ace-builds/src-noconflict/theme-textmate";
 
+import Variables from "./Variables";
 import transformFactory from "./transform";
 import snapshot from "./snapshot";
 
@@ -51,17 +52,17 @@ function App() {
       setActiveIndex(0);
       setData(newAlgorithm(...inputs));
     } catch (err) {
+      console.log(err);
       // do nothing
     }
   }, [text]);
 
   return (
-    <main style={{ width: "100vw", height: "100vh" }} className="flex bg-gray-800">
-      <section style={{ flex: 3 }} className="flex items-center p-8">
+    <main style={{ width: "100vw", height: "100vh" }} className="flex">
+      <section style={{ flex: 3 }} className="flex items-center p-8 bg-gray-200">
         <AceEditor
           style={{ width: "100%", height: "100%" }}
-          className="rounded-lg font-mono"
-          placeholder="Placeholder Text"
+          className="font-mono rounded-lg"
           mode="javascript"
           theme="textmate"
           onChange={(newText) => setText(newText)}
@@ -82,30 +83,34 @@ function App() {
       {data && (
         <section
           style={{ flex: 4 }}
-          className="flex relative items-center justify-center text-white overflow-scroll m-8"
+          className="flex relative items-center justify-center text-white overflow-scroll p-8 bg-gray-800"
         >
-          <pre>
-            <code>{JSON.stringify(data[activeIndex], null, 2)}</code>
-          </pre>
-          <form className="absolute top-0 font-mono text-sm text-black flex w-full">
+          <Variables vars={data[activeIndex]} prev={data[activeIndex - 1]} />
+          <form
+            style={{ top: "2rem" }}
+            className="absolute px-8 font-mono text-sm text-black flex w-full"
+          >
             <label style={{ flex: 1 }} className="mr-2">
-              <span className="block text-white">arr</span>
               <input
                 className="w-full p-2 rounded-md"
                 type="text"
                 value={JSON.stringify(inputs[0])}
               />
+              <span className="block text-white">arr</span>
             </label>
             <label style={{ flex: 1 }} className="ml-2">
-              <span className="block text-white">k</span>
               <input
                 className="w-full p-2 rounded-md"
                 type="text"
                 value={JSON.stringify(inputs[1])}
               />
+              <span className="block text-white">k</span>
             </label>
           </form>
-          <div className="absolute bottom-0 flex items-center">
+          <div
+            style={{ bottom: "2rem" }}
+            className="absolute bottom-0 flex items-center"
+          >
             <button
               className="bg-gray-700 font-semibold px-4 py-2 rounded-lg"
               onClick={() => setActiveIndex(Math.max(activeIndex - 1, 0))}
