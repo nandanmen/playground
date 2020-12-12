@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     fontFamily: {
       serif: ["PT Serif", "serif"],
-      mono: ["Menlo", "monospace"],
+      mono: ["Input Mono", "Menlo", "monospace"],
     },
   },
   variants: {

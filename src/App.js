@@ -1,13 +1,13 @@
 import React from "react";
-import AceEditor from "react-ace";
+import Editor from "react-simple-code-editor";
 import * as babel from "@babel/core";
-
-import "ace-builds/src-noconflict/mode-javascript";
-import "ace-builds/src-noconflict/theme-textmate";
+import { highlight, languages } from "prismjs";
 
 import Variables from "./Variables";
 import transformFactory from "./transform";
 import snapshot from "./snapshot";
+
+import "./prism-material-dark.css";
 
 function transform(input) {
   const out = babel.transform(input, { plugins: [transformFactory] });
@@ -17,7 +17,11 @@ function transform(input) {
   return eval(out.code);
 }
 
-const initialText = `
+const initialText = `/**
+ * Export default a function with a debugger statement and 
+ * watch it run on the right :)
+ */ 
+
 function findAllAverages(arr, k) {
   const result = [];
   let windowStart = 0;
@@ -57,31 +61,24 @@ function App() {
   }, [text]);
 
   return (
-    <main style={{ width: "100vw", height: "100vh" }} className="flex">
-      <section style={{ flex: 3 }} className="flex items-center p-8 bg-gray-200">
-        <AceEditor
+    <main
+      style={{ width: "100vw", height: "100vh", fontSize: "14px" }}
+      className="flex"
+    >
+      <section style={{ flex: 3 }} className="flex items-center">
+        <Editor
           style={{ width: "100%", height: "100%" }}
-          className="font-mono rounded-lg"
-          mode="javascript"
-          theme="textmate"
-          onChange={(newText) => setText(newText)}
-          fontSize={14}
-          showPrintMargin={true}
-          showGutter={true}
-          highlightActiveLine={true}
+          className="font-mono text-white bg-gray-900"
+          onValueChange={(code) => setText(code)}
+          padding={32}
           value={text}
-          setOptions={{
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: false,
-            enableSnippets: false,
-            showLineNumbers: true,
-            tabSize: 2,
-          }}
+          highlight={(code) => highlight(code, languages.javascript, "javascript")}
+          preClassName="language-javascript"
         />
       </section>
       <section
         style={{ flex: 4 }}
-        className="flex relative items-center justify-center text-white overflow-scroll p-8 bg-gray-800"
+        className="flex relative items-center justify-center text-white p-8 bg-gray-800"
       >
         {results && results[1] ? (
           <>
@@ -91,7 +88,7 @@ function App() {
             />
             <form
               style={{ top: "2rem" }}
-              className="absolute px-8 font-mono text-sm text-black flex w-full"
+              className="absolute px-8 font-mono text-black flex w-full"
             >
               <label style={{ flex: 1 }} className="mr-2">
                 <input

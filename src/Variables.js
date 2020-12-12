@@ -44,7 +44,7 @@ function VariableItem({ className = "", children }) {
   return (
     <motion.div
       layout
-      className={`bg-gray-600 w-1/2 py-2 px-4 rounded-md ${className}`}
+      className={`bg-gray-700 w-1/2 py-2 px-4 rounded-md ${className}`}
     >
       {children}
     </motion.div>
