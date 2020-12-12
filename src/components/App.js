@@ -2,6 +2,7 @@ import React from "react";
 import Editor from "react-simple-code-editor";
 import * as babel from "@babel/core";
 import { highlight, languages } from "prismjs";
+import { ControlledEditor } from "@monaco-editor/react";
 
 import Variables from "./Variables";
 import transformFactory from "../lib/transform";
@@ -13,7 +14,6 @@ import { motion } from "framer-motion";
 
 function transform(input) {
   const out = babel.transform(input, { plugins: [transformFactory] });
-  console.log(out.code);
   /**
    * This empty `require` is used within the `eval` to load the snapshot
    * builder. The `snapshot` variable here can be changed to any other
@@ -75,13 +75,13 @@ function App() {
   return (
     <main className={styles.main}>
       <section className={styles.editor}>
-        <Editor
+        <ControlledEditor
           className="w-full h-full font-mono text-white bg-gray-900"
-          onValueChange={(code) => setText(code)}
-          padding={32}
+          onChange={(_, code) => setText(code)}
+          height="100vh"
           value={text}
-          highlight={(code) => highlight(code, languages.javascript, "javascript")}
-          preClassName="language-javascript line-numbers"
+          language="javascript"
+          theme="dark"
         />
         {currentLine && <HighlightLine lineNumber={currentLine} />}
       </section>
