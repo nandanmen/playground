@@ -1,16 +1,18 @@
 import React from "react";
-import Editor from "react-simple-code-editor";
 import * as babel from "@babel/core";
-import { highlight, languages } from "prismjs";
-import { ControlledEditor } from "@monaco-editor/react";
+import { ControlledEditor, monaco } from "@monaco-editor/react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import Variables from "./Variables";
 import transformFactory from "../lib/transform";
 import snapshot from "../lib/snapshot";
-import "../styles/prism.css";
 
+import theme from "../styles/theme.json";
 import styles from "../styles/App.module.css";
-import { motion } from "framer-motion";
+
+monaco.init().then((monaco) => {
+  monaco.editor.defineTheme("night-owl", theme);
+});
 
 function transform(input) {
   const out = babel.transform(input, { plugins: [transformFactory] });
@@ -30,7 +32,7 @@ const initialText = `/**
  * watch it run on the right :)
  */ 
 
-function findAllAverages(arr, k) {
+export default function findAllAverages(arr, k) {
   const result = [];
   let windowStart = 0;
   let windowSum = 0;
@@ -53,6 +55,7 @@ function findAllAverages(arr, k) {
 const inputs = [[1, 3, 2, 6, -1, 4, 1, 8, 2], 3];
 
 function App() {
+  const [loading, setLoading] = React.useState(true);
   const [text, setText] = React.useState(initialText);
   const [results, setData] = React.useState([]);
   const [activeIndex, setActiveIndex] = React.useState(0);
@@ -70,20 +73,34 @@ function App() {
   }, [text]);
 
   const snapshots = results && results[1];
-  const currentLine =
-    snapshots && snapshots[activeIndex] && snapshots[activeIndex].line;
+
   return (
     <main className={styles.main}>
+      <AnimatePresence>
+        {loading && (
+          <motion.div exit={{ opacity: 0 }} className={styles.loader}>
+            Loading...
+          </motion.div>
+        )}
+      </AnimatePresence>
       <section className={styles.editor}>
         <ControlledEditor
-          className="w-full h-full font-mono text-white bg-gray-900"
           onChange={(_, code) => setText(code)}
-          height="100vh"
           value={text}
           language="javascript"
-          theme="dark"
+          theme="night-owl"
+          options={{
+            fontFamily: "'Input Mono', Menlo, 'Courier New', monospace",
+            fontSize: 14,
+            scrollbar: {
+              vertical: "hidden",
+            },
+            minimap: {
+              enabled: false,
+            },
+          }}
+          editorDidMount={() => setLoading(false)}
         />
-        {currentLine && <HighlightLine lineNumber={currentLine} />}
       </section>
       <section className={styles.visualizer}>
         {snapshots ? (
@@ -135,19 +152,6 @@ function App() {
         )}
       </section>
     </main>
-  );
-}
-
-function HighlightLine({ lineNumber }) {
-  const Padding = 32;
-  const LineHeight = 14 /* font size */ * 1.5; /* line height */
-  const VisualOffset = 2;
-  return (
-    <motion.div
-      layout
-      style={{ top: Padding + (lineNumber - 1) * LineHeight - VisualOffset }}
-      className="absolute left-0 h-6 w-full bg-gray-200 opacity-10 pointer-events-none"
-    ></motion.div>
   );
 }
 

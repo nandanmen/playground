@@ -22,18 +22,18 @@ export default function transformFactory({ types: t }) {
             const funcName = declaration.id?.name;
 
             /**
-             * Set this function as the entry point of the script. We're going to return
-             * everything in `inferredData` later so the app can use them.
+             * Set this function as the entry point of the script. We're going to
+             * return everything in `inferredData` later so the app can use them.
              */
             this.inferredData.entryPoint = funcName;
 
             declaration.params.forEach((param) => {
               /**
-               * For the entry point, only support identifiers as parameters right now
-               * i.e. not things like ({ a, b }) => {} or (a, ...rest) => {}.
+               * For the entry point, only support identifiers as parameters right
+               * now i.e. not things like ({ a, b }) => {} or (a, ...rest) => {}.
                *
-               * There's various edge cases with these expressions related to putting in
-               * custom inputs, so we're leaving them out for simplicity.
+               * There's various edge cases with these expressions related to
+               * putting in custom inputs, so we're leaving them out for simplicity.
                */
               t.assertIdentifier(param);
               this.inferredData.params.push(param.name);

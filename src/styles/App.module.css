@@ -3,10 +3,11 @@
   width: 100vw;
   height: 100vh;
   font-size: 14px;
+  overflow: hidden;
 }
 
 .editor {
-  @apply flex relative items-center;
+  @apply flex relative items-center py-8 bg-gray-900;
   flex: 1;
 }
 
@@ -27,4 +28,14 @@
 .arguments {
   @apply absolute px-8 font-mono text-black flex w-full;
   top: 2rem;
+}
+
+.loader {
+  @apply bg-gray-900 text-white font-mono flex items-center justify-center;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  z-index: 100;
 }
