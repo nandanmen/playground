@@ -4,10 +4,11 @@ import * as babel from "@babel/core";
 import { highlight, languages } from "prismjs";
 
 import Variables from "./Variables";
-import transformFactory from "./transform";
-import snapshot from "./snapshot";
+import transformFactory from "../lib/transform";
+import snapshot from "../lib/snapshot";
+import "../styles/prism.css";
 
-import "./prism-material-dark.css";
+import styles from "../styles/App.module.css";
 
 function transform(input) {
   const out = babel.transform(input, { plugins: [transformFactory] });
@@ -61,14 +62,10 @@ function App() {
   }, [text]);
 
   return (
-    <main
-      style={{ width: "100vw", height: "100vh", fontSize: "14px" }}
-      className="flex"
-    >
-      <section style={{ flex: 3 }} className="flex items-center">
+    <main className={styles.main}>
+      <section className={styles.editor}>
         <Editor
-          style={{ width: "100%", height: "100%" }}
-          className="font-mono text-white bg-gray-900"
+          className="w-full h-full font-mono text-white bg-gray-900"
           onValueChange={(code) => setText(code)}
           padding={32}
           value={text}
@@ -76,20 +73,14 @@ function App() {
           preClassName="language-javascript"
         />
       </section>
-      <section
-        style={{ flex: 4 }}
-        className="flex relative items-center justify-center text-white p-8 bg-gray-800"
-      >
+      <section className={styles.visualizer}>
         {results && results[1] ? (
           <>
             <Variables
               vars={results[1][activeIndex]}
               prev={results[1][activeIndex - 1]}
             />
-            <form
-              style={{ top: "2rem" }}
-              className="absolute px-8 font-mono text-black flex w-full"
-            >
+            <form className={styles.arguments}>
               <label style={{ flex: 1 }} className="mr-2">
                 <input
                   className="w-full p-2 rounded-md"
@@ -107,12 +98,9 @@ function App() {
                 <span className="block text-white">k</span>
               </label>
             </form>
-            <div
-              style={{ bottom: "2rem" }}
-              className="absolute bottom-0 flex items-center"
-            >
+            <div className={styles.controls}>
               <button
-                className="bg-gray-700 font-semibold px-4 py-2 rounded-lg"
+                className={styles.button}
                 onClick={() => setActiveIndex(Math.max(activeIndex - 1, 0))}
               >
                 Prev
@@ -121,7 +109,7 @@ function App() {
                 {activeIndex + 1} / {results[1].length}
               </p>
               <button
-                className="bg-gray-700 font-semibold px-4 py-2 rounded-lg"
+                className={styles.button}
                 onClick={() =>
                   setActiveIndex(Math.min(activeIndex + 1, results[1].length - 1))
                 }

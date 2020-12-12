@@ -1,0 +1,40 @@
+.main {
+  @apply flex;
+  width: 100vw;
+  height: 100vh;
+  font-size: 14px;
+}
+
+.editor {
+  @apply flex items-center;
+  flex: 1;
+}
+
+.visualizer {
+  @apply flex relative items-center justify-center text-white p-8 bg-gray-800;
+  flex: 1;
+}
+
+.controls {
+  @apply absolute bottom-0 flex items-center;
+  bottom: 2rem;
+}
+
+.button {
+  @apply bg-gray-700 font-semibold px-4 py-2 rounded-lg;
+}
+
+.arguments {
+  @apply absolute px-8 font-mono text-black flex w-full;
+  top: 2rem;
+}
+
+@media screen and (min-width: 1500px) {
+  .editor {
+    flex: 3;
+  }
+
+  .visualizer {
+    flex: 4;
+  }
+}
