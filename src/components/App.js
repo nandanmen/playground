@@ -57,22 +57,23 @@ const inputs = [[1, 3, 2, 6, -1, 4, 1, 8, 2], 3];
 function App() {
   const [loading, setLoading] = React.useState(true);
   const [text, setText] = React.useState(initialText);
-  const [results, setData] = React.useState([]);
+  const [results, setData] = React.useState(null);
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   React.useEffect(() => {
     try {
-      const { __params, __entryPoint } = transform(text);
-      console.log(__params);
+      const { params, entryPoint, snapshots } = transform(text);
+      console.log(params);
       setActiveIndex(0);
-      setData(__entryPoint(...inputs));
+      entryPoint(...inputs);
+      setData(snapshots);
     } catch (err) {
       console.log(err);
       // do nothing
     }
   }, [text]);
 
-  const snapshots = results && results[1];
+  const snapshots = results && results.data;
 
   return (
     <main className={styles.main}>
@@ -92,9 +93,6 @@ function App() {
           options={{
             fontFamily: "'Input Mono', Menlo, 'Courier New', monospace",
             fontSize: 14,
-            scrollbar: {
-              vertical: "hidden",
-            },
             minimap: {
               enabled: false,
             },
@@ -103,7 +101,7 @@ function App() {
         />
       </section>
       <section className={styles.visualizer}>
-        {snapshots ? (
+        {snapshots && snapshots.length ? (
           <>
             <Variables
               vars={snapshots[activeIndex]}
@@ -135,12 +133,12 @@ function App() {
                 Prev
               </button>
               <p className="mx-4">
-                {activeIndex + 1} / {results[1].length}
+                {activeIndex + 1} / {snapshots.length}
               </p>
               <button
                 className={styles.button}
                 onClick={() =>
-                  setActiveIndex(Math.min(activeIndex + 1, results[1].length - 1))
+                  setActiveIndex(Math.min(activeIndex + 1, snapshots.length - 1))
                 }
               >
                 Next
@@ -148,7 +146,9 @@ function App() {
             </div>
           </>
         ) : (
-          <p>Please return a value from your function.</p>
+          <p>
+            Add a <code>debugger</code> statement to your code to get started.
+          </p>
         )}
       </section>
     </main>

@@ -39,18 +39,6 @@ export default function transformFactory({ types: t }) {
               this.inferredData.params.push(param.name);
             });
 
-            path.traverse(
-              {
-                ReturnStatement(path) {
-                  const nearestAncestor = getClosestFunctionAncestor(t, path);
-                  if (nearestAncestor === this.funcName) {
-                    path.node.argument = createSnapshotReturn(t, path.node);
-                  }
-                },
-              },
-              { funcName }
-            );
-
             /**
              * Finally, remove the `export default` so it can be used with eval.
              */
@@ -96,18 +84,7 @@ export default function transformFactory({ types: t }) {
   };
 }
 
-// helpers
-
-function getClosestFunctionAncestor(t, path) {
-  let parent = path.parentPath;
-  while (parent) {
-    if (t.isFunctionDeclaration(parent.node)) {
-      return parent.node.id?.name;
-    }
-    parent = parent.parentPath;
-  }
-  return null;
-}
+// Helpers
 
 function getNames(t, node) {
   if (t.isIdentifier(node)) {
@@ -147,7 +124,7 @@ function buildMetadata(t, program, data) {
       meta,
       createObjectExpression(
         t,
-        ["__params", "__entryPoint"].map((name) => [name, name])
+        ["__params", "__entryPoint", SNAPSHOT].map((name) => [name.slice(2), name])
       )
     )
   );
@@ -206,13 +183,5 @@ function createSnapshotInitialization(t) {
         []
       )
     ),
-  ]);
-}
-
-function createSnapshotReturn(t, node) {
-  /* return args -> return [args, __snapshots.data] */
-  return t.arrayExpression([
-    node.argument || t.nullLiteral(),
-    t.memberExpression(t.identifier(SNAPSHOT), t.identifier("data")),
   ]);
 }
