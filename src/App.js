@@ -42,8 +42,7 @@ const inputs = [[1, 3, 2, 6, -1, 4, 1, 8, 2], 3];
 
 function App() {
   const [text, setText] = React.useState(initialText);
-  // eslint-disable-next-line no-unused-vars
-  const [[_, data], setData] = React.useState([]);
+  const [results, setData] = React.useState([]);
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   React.useEffect(() => {
@@ -80,57 +79,64 @@ function App() {
           }}
         />
       </section>
-      {data && (
-        <section
-          style={{ flex: 4 }}
-          className="flex relative items-center justify-center text-white overflow-scroll p-8 bg-gray-800"
-        >
-          <Variables vars={data[activeIndex]} prev={data[activeIndex - 1]} />
-          <form
-            style={{ top: "2rem" }}
-            className="absolute px-8 font-mono text-sm text-black flex w-full"
-          >
-            <label style={{ flex: 1 }} className="mr-2">
-              <input
-                className="w-full p-2 rounded-md"
-                type="text"
-                value={JSON.stringify(inputs[0])}
-              />
-              <span className="block text-white">arr</span>
-            </label>
-            <label style={{ flex: 1 }} className="ml-2">
-              <input
-                className="w-full p-2 rounded-md"
-                type="text"
-                value={JSON.stringify(inputs[1])}
-              />
-              <span className="block text-white">k</span>
-            </label>
-          </form>
-          <div
-            style={{ bottom: "2rem" }}
-            className="absolute bottom-0 flex items-center"
-          >
-            <button
-              className="bg-gray-700 font-semibold px-4 py-2 rounded-lg"
-              onClick={() => setActiveIndex(Math.max(activeIndex - 1, 0))}
+      <section
+        style={{ flex: 4 }}
+        className="flex relative items-center justify-center text-white overflow-scroll p-8 bg-gray-800"
+      >
+        {results && results[1] ? (
+          <>
+            <Variables
+              vars={results[1][activeIndex]}
+              prev={results[1][activeIndex - 1]}
+            />
+            <form
+              style={{ top: "2rem" }}
+              className="absolute px-8 font-mono text-sm text-black flex w-full"
             >
-              Prev
-            </button>
-            <p className="mx-4">
-              {activeIndex + 1} / {data.length}
-            </p>
-            <button
-              className="bg-gray-700 font-semibold px-4 py-2 rounded-lg"
-              onClick={() =>
-                setActiveIndex(Math.min(activeIndex + 1, data.length - 1))
-              }
+              <label style={{ flex: 1 }} className="mr-2">
+                <input
+                  className="w-full p-2 rounded-md"
+                  type="text"
+                  value={JSON.stringify(inputs[0])}
+                />
+                <span className="block text-white">arr</span>
+              </label>
+              <label style={{ flex: 1 }} className="ml-2">
+                <input
+                  className="w-full p-2 rounded-md"
+                  type="text"
+                  value={JSON.stringify(inputs[1])}
+                />
+                <span className="block text-white">k</span>
+              </label>
+            </form>
+            <div
+              style={{ bottom: "2rem" }}
+              className="absolute bottom-0 flex items-center"
             >
-              Next
-            </button>
-          </div>
-        </section>
-      )}
+              <button
+                className="bg-gray-700 font-semibold px-4 py-2 rounded-lg"
+                onClick={() => setActiveIndex(Math.max(activeIndex - 1, 0))}
+              >
+                Prev
+              </button>
+              <p className="mx-4">
+                {activeIndex + 1} / {results[1].length}
+              </p>
+              <button
+                className="bg-gray-700 font-semibold px-4 py-2 rounded-lg"
+                onClick={() =>
+                  setActiveIndex(Math.min(activeIndex + 1, results[1].length - 1))
+                }
+              >
+                Next
+              </button>
+            </div>
+          </>
+        ) : (
+          <p>Please return a value from your function.</p>
+        )}
+      </section>
     </main>
   );
 }
