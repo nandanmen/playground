@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 
 function transform(input) {
   const out = babel.transform(input, { plugins: [transformFactory] });
+  console.log(out.code);
   /**
    * This empty `require` is used within the `eval` to load the snapshot
    * builder. The `snapshot` variable here can be changed to any other

@@ -1,5 +1,4 @@
 const SNAPSHOT = "__snapshots";
-const GLOBAL = "global";
 
 // Main
 
@@ -58,23 +57,18 @@ export default function transformFactory({ types: t }) {
             path.replaceWith(path.node.declaration);
           },
           FunctionDeclaration(path) {
-            const funcName = path.node.id.name;
-            const declared = new Set();
             /**
              * Declare all function parameters so they're not skipped by the
              * snapshotting function.
              */
             path.node.params.forEach((param) => {
               const names = getNames(t, param);
-              names.forEach((name) => declared.add(name));
+              names.forEach((name) => this.declared.add(name));
             });
-            this.declared[funcName] = declared;
           },
           DebuggerStatement(path) {
-            const closestFunc = getClosestFunctionAncestor(t, path) || GLOBAL;
-            const declared = this.declared[closestFunc];
             const scope = Object.keys(path.scope.getAllBindings()).filter((name) =>
-              declared.has(name)
+              this.declared.has(name)
             );
             path.replaceWith(
               createSnapshot(t, [
@@ -84,22 +78,17 @@ export default function transformFactory({ types: t }) {
             );
           },
           VariableDeclarator(path) {
-            const closestFunc = getClosestFunctionAncestor(t, path) || GLOBAL;
-            const declared = this.declared[closestFunc];
             const names = getNames(t, path.node.id);
-            names.forEach((name) => declared.add(name));
+            names.forEach((name) => this.declared.add(name));
           },
         };
 
-        const declared = {
-          [GLOBAL]: new Set(),
-        };
         const inferredData = {
           params: [],
           entryPoint: null,
         };
 
-        path.traverse(visitor, { declared, inferredData });
+        path.traverse(visitor, { declared: new Set(), inferredData });
 
         buildMetadata(t, path.node, inferredData);
       },
