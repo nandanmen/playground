@@ -13,7 +13,6 @@ import { motion } from "framer-motion";
 
 function transform(input) {
   const out = babel.transform(input, { plugins: [transformFactory] });
-  console.log(out.code);
   /**
    * This empty `require` is used within the `eval` to load the snapshot
    * builder. The `snapshot` variable here can be changed to any other
@@ -30,7 +29,7 @@ const initialText = `/**
  * watch it run on the right :)
  */ 
 
-function findAllAverages(arr, k) {
+export default function findAllAverages(arr, k) {
   const result = [];
   let windowStart = 0;
   let windowSum = 0;
