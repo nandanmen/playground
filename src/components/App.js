@@ -58,9 +58,10 @@ function App() {
 
   React.useEffect(() => {
     try {
-      const newAlgorithm = transform(text);
+      const { __params, __entryPoint } = transform(text);
+      console.log(__params);
       setActiveIndex(0);
-      setData(newAlgorithm(...inputs));
+      setData(__entryPoint(...inputs));
     } catch (err) {
       console.log(err);
       // do nothing
