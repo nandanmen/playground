@@ -6,7 +6,7 @@
 }
 
 .editor {
-  @apply flex items-center;
+  @apply flex relative items-center;
   flex: 1;
 }
 
@@ -27,14 +27,4 @@
 .arguments {
   @apply absolute px-8 font-mono text-black flex w-full;
   top: 2rem;
-}
-
-@media screen and (min-width: 1500px) {
-  .editor {
-    flex: 3;
-  }
-
-  .visualizer {
-    flex: 4;
-  }
 }

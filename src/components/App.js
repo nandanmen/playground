@@ -9,9 +9,15 @@ import snapshot from "../lib/snapshot";
 import "../styles/prism.css";
 
 import styles from "../styles/App.module.css";
+import { motion } from "framer-motion";
 
 function transform(input) {
   const out = babel.transform(input, { plugins: [transformFactory] });
+  /**
+   * This empty `require` is used within the `eval` to load the snapshot
+   * builder. The `snapshot` variable here can be changed to any other
+   * snapshot implementation.
+   */
   // eslint-disable-next-line no-unused-vars
   const require = () => snapshot;
   // eslint-disable-next-line no-eval
@@ -61,6 +67,9 @@ function App() {
     }
   }, [text]);
 
+  const snapshots = results && results[1];
+  const currentLine =
+    snapshots && snapshots[activeIndex] && snapshots[activeIndex].line;
   return (
     <main className={styles.main}>
       <section className={styles.editor}>
@@ -70,15 +79,16 @@ function App() {
           padding={32}
           value={text}
           highlight={(code) => highlight(code, languages.javascript, "javascript")}
-          preClassName="language-javascript"
+          preClassName="language-javascript line-numbers"
         />
+        {currentLine && <HighlightLine lineNumber={currentLine} />}
       </section>
       <section className={styles.visualizer}>
-        {results && results[1] ? (
+        {snapshots ? (
           <>
             <Variables
-              vars={results[1][activeIndex]}
-              prev={results[1][activeIndex - 1]}
+              vars={snapshots[activeIndex]}
+              prev={snapshots[activeIndex - 1]}
             />
             <form className={styles.arguments}>
               <label style={{ flex: 1 }} className="mr-2">
@@ -123,6 +133,19 @@ function App() {
         )}
       </section>
     </main>
+  );
+}
+
+function HighlightLine({ lineNumber }) {
+  const Padding = 32;
+  const LineHeight = 14 /* font size */ * 1.5; /* line height */
+  const VisualOffset = 2;
+  return (
+    <motion.div
+      layout
+      style={{ top: Padding + (lineNumber - 1) * LineHeight - VisualOffset }}
+      className="absolute left-0 h-6 w-full bg-gray-200 opacity-10 pointer-events-none"
+    ></motion.div>
   );
 }
 

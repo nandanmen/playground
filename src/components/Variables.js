@@ -8,7 +8,7 @@ export default function Variables({ vars = {}, prev }) {
   values.sort(compareKeysAlphabetically);
   return (
     <AnimateSharedLayout>
-      <section style={{ maxWidth: "50rem" }} className="font-mono w-full">
+      <section style={{ maxWidth: "40rem" }} className="font-mono w-full">
         <motion.h1 layout className="text-center mb-4">
           debugger @ line {vars.line}
         </motion.h1>
