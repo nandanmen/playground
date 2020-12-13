@@ -1,0 +1,4 @@
+.overlay {
+  @apply text-white font-mono flex items-center justify-center top-0 left-0 absolute w-full h-full;
+  z-index: 100;
+}

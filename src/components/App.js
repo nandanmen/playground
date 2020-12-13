@@ -1,17 +1,11 @@
 import React from "react";
-import { ControlledEditor, monaco } from "@monaco-editor/react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useDebounce } from "use-debounce";
 
 import Variables from "./Variables";
+import Editor from "./Editor";
+import Overlay from "./Overlay";
 import Runner from "../lib/runner.worker";
-
-import theme from "../styles/theme.json";
 import styles from "../styles/App.module.css";
-
-monaco.init().then((monaco) => {
-  monaco.editor.defineTheme("night-owl", theme);
-});
 
 const initialText = `/**
  * Export default a function with a debugger statement and 
@@ -40,7 +34,7 @@ export default function findAllAverages(arr, k) {
 
 const inputs = [[1, 3, 2, 6, -1, 4, 1, 8, 2], 3];
 
-const DebounceDelay = 800;
+const DebounceDelay = 600;
 
 function App() {
   const [loading, setLoading] = React.useState(true);
@@ -83,42 +77,16 @@ function App() {
   const snapshots = results && results.snapshots;
   return (
     <main className={styles.main}>
-      <AnimatePresence>
-        {loading && (
-          <motion.div exit={{ opacity: 0 }} className={styles.loader}>
-            Loading...
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Overlay show={loading} initial={{ opacity: 1 }} />
       <section className={styles.editor}>
-        <ControlledEditor
-          onChange={(_, code) => setText(code)}
+        <Editor
+          onChange={(code) => setText(code)}
           value={text}
-          language="javascript"
-          theme="night-owl"
-          options={{
-            fontFamily: "'Input Mono', Menlo, 'Courier New', monospace",
-            fontSize: 14,
-            minimap: {
-              enabled: false,
-            },
-          }}
-          editorDidMount={() => setLoading(false)}
+          onMount={() => setLoading(false)}
         />
       </section>
       <section className={styles.visualizer}>
-        <AnimatePresence>
-          {processing && !loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className={styles.processing}
-            >
-              Loading...
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <Overlay show={processing && !loading} className="bg-opacity-60" />
         {snapshots && snapshots.length ? (
           <>
             <Variables

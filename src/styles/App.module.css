@@ -16,11 +16,6 @@
   flex: 1;
 }
 
-.processing {
-  @apply flex items-center justify-center font-mono absolute top-0 left-0 w-full h-full bg-gray-900 bg-opacity-60;
-  z-index: 100;
-}
-
 .controls {
   @apply absolute bottom-0 flex items-center;
   bottom: 2rem;
@@ -33,14 +28,4 @@
 .arguments {
   @apply absolute px-8 font-mono text-black flex w-full;
   top: 2rem;
-}
-
-.loader {
-  @apply bg-gray-900 text-white font-mono flex items-center justify-center;
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
-  top: 0;
-  left: 0;
-  z-index: 100;
 }
