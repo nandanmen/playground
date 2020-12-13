@@ -16,6 +16,11 @@
   flex: 1;
 }
 
+.processing {
+  @apply flex items-center justify-center font-mono absolute top-0 left-0 w-full h-full bg-gray-900 bg-opacity-60;
+  z-index: 100;
+}
+
 .controls {
   @apply absolute bottom-0 flex items-center;
   bottom: 2rem;
