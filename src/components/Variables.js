@@ -28,8 +28,12 @@ export default function Variables({ vars = {}, prev }) {
                   }}
                   exit={{ opacity: 0, y: 10 }}
                 >
-                  <VariableItem className="mr-2">{key}</VariableItem>
-                  <VariableItem>{JSON.stringify(val)}</VariableItem>
+                  <VariableItem style={{ flex: 1 }} className="mr-2">
+                    {key}
+                  </VariableItem>
+                  <VariableItem style={{ flex: 2 }}>
+                    {JSON.stringify(val)}
+                  </VariableItem>
                 </motion.li>
               );
             })}
@@ -40,14 +44,13 @@ export default function Variables({ vars = {}, prev }) {
   );
 }
 
-function VariableItem({ className = "", children }) {
+function VariableItem({ className = "", ...props }) {
   return (
     <motion.div
       layout
-      className={`bg-gray-700 w-1/2 py-2 px-4 rounded-md ${className}`}
-    >
-      {children}
-    </motion.div>
+      className={`bg-gray-700 py-2 px-4 rounded-md ${className}`}
+      {...props}
+    />
   );
 }
 

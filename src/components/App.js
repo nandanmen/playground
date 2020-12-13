@@ -1,31 +1,11 @@
 import React from "react";
-import * as babel from "@babel/core";
-import { ControlledEditor, monaco } from "@monaco-editor/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useDebounce } from "use-debounce";
 
 import Variables from "./Variables";
-import transformFactory from "../lib/transform";
-import snapshot from "../lib/snapshot";
-
-import theme from "../styles/theme.json";
+import Editor from "./Editor";
+import Overlay from "./Overlay";
+import Runner from "../lib/runner.worker";
 import styles from "../styles/App.module.css";
-
-monaco.init().then((monaco) => {
-  monaco.editor.defineTheme("night-owl", theme);
-});
-
-function transform(input) {
-  const out = babel.transform(input, { plugins: [transformFactory] });
-  /**
-   * This empty `require` is used within the `eval` to load the snapshot
-   * builder. The `snapshot` variable here can be changed to any other
-   * snapshot implementation.
-   */
-  // eslint-disable-next-line no-unused-vars
-  const require = () => snapshot;
-  // eslint-disable-next-line no-eval
-  return eval(out.code);
-}
 
 const initialText = `/**
  * Export default a function with a debugger statement and 
@@ -54,53 +34,59 @@ export default function findAllAverages(arr, k) {
 
 const inputs = [[1, 3, 2, 6, -1, 4, 1, 8, 2], 3];
 
+const DebounceDelay = 600;
+
 function App() {
   const [loading, setLoading] = React.useState(true);
+  const [processing, setProcessing] = React.useState(false);
   const [text, setText] = React.useState(initialText);
-  const [results, setData] = React.useState(null);
+  const [debouncedText] = useDebounce(text, DebounceDelay);
+  const [results, setResults] = React.useState(null);
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   React.useEffect(() => {
-    try {
-      const { params, entryPoint, snapshots } = transform(text);
-      console.log(params);
-      setActiveIndex(0);
-      entryPoint(...inputs);
-      setData(snapshots);
-    } catch (err) {
-      console.log(err);
-      // do nothing
-    }
-  }, [text]);
+    setProcessing(true);
+    const worker = new Runner();
 
-  const snapshots = results && results.data;
+    const timeout = setTimeout(() => {
+      console.error(`Timed out while running algorithm`);
+      worker.terminate();
+      setProcessing(false);
+    }, 2000);
 
+    worker.addEventListener("message", (evt) => {
+      clearTimeout(timeout);
+      setResults(evt.data);
+      worker.terminate();
+      setProcessing(false);
+    });
+
+    worker.addEventListener("error", (evt) => {
+      clearTimeout(timeout);
+      setProcessing(false);
+    });
+
+    worker.postMessage({ code: debouncedText, inputs });
+
+    return () => {
+      worker.terminate();
+      clearTimeout(timeout);
+    };
+  }, [debouncedText]);
+
+  const snapshots = results && results.snapshots;
   return (
     <main className={styles.main}>
-      <AnimatePresence>
-        {loading && (
-          <motion.div exit={{ opacity: 0 }} className={styles.loader}>
-            Loading...
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Overlay show={loading} initial={{ opacity: 1 }} />
       <section className={styles.editor}>
-        <ControlledEditor
-          onChange={(_, code) => setText(code)}
+        <Editor
+          onChange={(code) => setText(code)}
           value={text}
-          language="javascript"
-          theme="night-owl"
-          options={{
-            fontFamily: "'Input Mono', Menlo, 'Courier New', monospace",
-            fontSize: 14,
-            minimap: {
-              enabled: false,
-            },
-          }}
-          editorDidMount={() => setLoading(false)}
+          onMount={() => setLoading(false)}
         />
       </section>
       <section className={styles.visualizer}>
+        <Overlay show={processing && !loading} className="bg-opacity-60" />
         {snapshots && snapshots.length ? (
           <>
             <Variables
