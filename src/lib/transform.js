@@ -22,34 +22,22 @@ export default function transformFactory({ types: t }) {
             const funcName = declaration.id?.name;
 
             /**
-             * Set this function as the entry point of the script. We're going to return
-             * everything in `inferredData` later so the app can use them.
+             * Set this function as the entry point of the script. We're going to
+             * return everything in `inferredData` later so the app can use them.
              */
             this.inferredData.entryPoint = funcName;
 
             declaration.params.forEach((param) => {
               /**
-               * For the entry point, only support identifiers as parameters right now
-               * i.e. not things like ({ a, b }) => {} or (a, ...rest) => {}.
+               * For the entry point, only support identifiers as parameters right
+               * now i.e. not things like ({ a, b }) => {} or (a, ...rest) => {}.
                *
-               * There's various edge cases with these expressions related to putting in
-               * custom inputs, so we're leaving them out for simplicity.
+               * There's various edge cases with these expressions related to
+               * putting in custom inputs, so we're leaving them out for simplicity.
                */
               t.assertIdentifier(param);
               this.inferredData.params.push(param.name);
             });
-
-            path.traverse(
-              {
-                ReturnStatement(path) {
-                  const nearestAncestor = getClosestFunctionAncestor(t, path);
-                  if (nearestAncestor === this.funcName) {
-                    path.node.argument = createSnapshotReturn(t, path.node);
-                  }
-                },
-              },
-              { funcName }
-            );
 
             /**
              * Finally, remove the `export default` so it can be used with eval.
@@ -96,18 +84,7 @@ export default function transformFactory({ types: t }) {
   };
 }
 
-// helpers
-
-function getClosestFunctionAncestor(t, path) {
-  let parent = path.parentPath;
-  while (parent) {
-    if (t.isFunctionDeclaration(parent.node)) {
-      return parent.node.id?.name;
-    }
-    parent = parent.parentPath;
-  }
-  return null;
-}
+// Helpers
 
 function getNames(t, node) {
   if (t.isIdentifier(node)) {
@@ -147,7 +124,7 @@ function buildMetadata(t, program, data) {
       meta,
       createObjectExpression(
         t,
-        ["__params", "__entryPoint"].map((name) => [name, name])
+        ["__params", "__entryPoint", SNAPSHOT].map((name) => [name.slice(2), name])
       )
     )
   );
@@ -206,13 +183,5 @@ function createSnapshotInitialization(t) {
         []
       )
     ),
-  ]);
-}
-
-function createSnapshotReturn(t, node) {
-  /* return args -> return [args, __snapshots.data] */
-  return t.arrayExpression([
-    node.argument || t.nullLiteral(),
-    t.memberExpression(t.identifier(SNAPSHOT), t.identifier("data")),
   ]);
 }

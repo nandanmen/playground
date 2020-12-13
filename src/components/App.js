@@ -1,15 +1,18 @@
 import React from "react";
-import Editor from "react-simple-code-editor";
 import * as babel from "@babel/core";
-import { highlight, languages } from "prismjs";
+import { ControlledEditor, monaco } from "@monaco-editor/react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import Variables from "./Variables";
 import transformFactory from "../lib/transform";
 import snapshot from "../lib/snapshot";
-import "../styles/prism.css";
 
+import theme from "../styles/theme.json";
 import styles from "../styles/App.module.css";
-import { motion } from "framer-motion";
+
+monaco.init().then((monaco) => {
+  monaco.editor.defineTheme("night-owl", theme);
+});
 
 function transform(input) {
   const out = babel.transform(input, { plugins: [transformFactory] });
@@ -52,40 +55,53 @@ export default function findAllAverages(arr, k) {
 const inputs = [[1, 3, 2, 6, -1, 4, 1, 8, 2], 3];
 
 function App() {
+  const [loading, setLoading] = React.useState(true);
   const [text, setText] = React.useState(initialText);
-  const [results, setData] = React.useState([]);
+  const [results, setData] = React.useState(null);
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   React.useEffect(() => {
     try {
-      const { __params, __entryPoint } = transform(text);
-      console.log(__params);
+      const { params, entryPoint, snapshots } = transform(text);
+      console.log(params);
       setActiveIndex(0);
-      setData(__entryPoint(...inputs));
+      entryPoint(...inputs);
+      setData(snapshots);
     } catch (err) {
       console.log(err);
       // do nothing
     }
   }, [text]);
 
-  const snapshots = results && results[1];
-  const currentLine =
-    snapshots && snapshots[activeIndex] && snapshots[activeIndex].line;
+  const snapshots = results && results.data;
+
   return (
     <main className={styles.main}>
+      <AnimatePresence>
+        {loading && (
+          <motion.div exit={{ opacity: 0 }} className={styles.loader}>
+            Loading...
+          </motion.div>
+        )}
+      </AnimatePresence>
       <section className={styles.editor}>
-        <Editor
-          className="w-full h-full font-mono text-white bg-gray-900"
-          onValueChange={(code) => setText(code)}
-          padding={32}
+        <ControlledEditor
+          onChange={(_, code) => setText(code)}
           value={text}
-          highlight={(code) => highlight(code, languages.javascript, "javascript")}
-          preClassName="language-javascript line-numbers"
+          language="javascript"
+          theme="night-owl"
+          options={{
+            fontFamily: "'Input Mono', Menlo, 'Courier New', monospace",
+            fontSize: 14,
+            minimap: {
+              enabled: false,
+            },
+          }}
+          editorDidMount={() => setLoading(false)}
         />
-        {currentLine && <HighlightLine lineNumber={currentLine} />}
       </section>
       <section className={styles.visualizer}>
-        {snapshots ? (
+        {snapshots && snapshots.length ? (
           <>
             <Variables
               vars={snapshots[activeIndex]}
@@ -117,12 +133,12 @@ function App() {
                 Prev
               </button>
               <p className="mx-4">
-                {activeIndex + 1} / {results[1].length}
+                {activeIndex + 1} / {snapshots.length}
               </p>
               <button
                 className={styles.button}
                 onClick={() =>
-                  setActiveIndex(Math.min(activeIndex + 1, results[1].length - 1))
+                  setActiveIndex(Math.min(activeIndex + 1, snapshots.length - 1))
                 }
               >
                 Next
@@ -130,23 +146,12 @@ function App() {
             </div>
           </>
         ) : (
-          <p>Please return a value from your function.</p>
+          <p>
+            Add a <code>debugger</code> statement to your code to get started.
+          </p>
         )}
       </section>
     </main>
-  );
-}
-
-function HighlightLine({ lineNumber }) {
-  const Padding = 32;
-  const LineHeight = 14 /* font size */ * 1.5; /* line height */
-  const VisualOffset = 2;
-  return (
-    <motion.div
-      layout
-      style={{ top: Padding + (lineNumber - 1) * LineHeight - VisualOffset }}
-      className="absolute left-0 h-6 w-full bg-gray-200 opacity-10 pointer-events-none"
-    ></motion.div>
   );
 }
 
