@@ -14,7 +14,7 @@ export default function Editor({ value, onChange, onMount }) {
       theme="night-owl"
       options={{
         fontFamily: "'Input Mono', Menlo, 'Courier New', monospace",
-        fontSize: 14,
+        fontSize: 13,
         minimap: {
           enabled: false,
         },

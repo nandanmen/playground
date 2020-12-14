@@ -35,6 +35,7 @@ export default function findAllAverages(arr, k) {
 const inputs = [[1, 3, 2, 6, -1, 4, 1, 8, 2], 3];
 
 const DebounceDelay = 600;
+const RuntimeTimeout = 2000;
 
 function App() {
   const [loading, setLoading] = React.useState(true);
@@ -52,7 +53,7 @@ function App() {
       console.error(`Timed out while running algorithm`);
       worker.terminate();
       setProcessing(false);
-    }, 2000);
+    }, RuntimeTimeout);
 
     worker.addEventListener("message", (evt) => {
       clearTimeout(timeout);

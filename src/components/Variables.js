@@ -28,10 +28,8 @@ export default function Variables({ vars = {}, prev }) {
                   }}
                   exit={{ opacity: 0, y: 10 }}
                 >
-                  <VariableItem style={{ flex: 1 }} className="mr-2">
-                    {key}
-                  </VariableItem>
-                  <VariableItem style={{ flex: 2 }}>
+                  <VariableItem className="w-1/3 mr-2">{key}</VariableItem>
+                  <VariableItem className="w-2/3">
                     {JSON.stringify(val)}
                   </VariableItem>
                 </motion.li>

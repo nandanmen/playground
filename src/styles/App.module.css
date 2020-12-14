@@ -1,19 +1,16 @@
 .main {
-  @apply flex;
+  @apply flex overflow-hidden;
   width: 100vw;
   height: 100vh;
   font-size: 14px;
-  overflow: hidden;
 }
 
 .editor {
-  @apply flex relative items-center py-8 bg-gray-900;
-  flex: 1;
+  @apply flex flex-1 relative items-center py-8 bg-gray-900;
 }
 
 .visualizer {
-  @apply flex relative items-center justify-center text-white p-8 bg-gray-800;
-  flex: 1;
+  @apply flex flex-1 relative items-center justify-center text-white p-8 bg-gray-800;
 }
 
 .controls {
