@@ -1,11 +1,11 @@
 import React from "react";
-import { useDebounce } from "use-debounce";
+
+import useCode from "../lib/useCode";
+import styles from "../styles/App.module.css";
 
 import Variables from "./Variables";
-import Editor from "./Editor";
+import DebouncedEditor from "./DebouncedEditor";
 import Overlay from "./Overlay";
-import Runner from "../lib/runner.worker";
-import styles from "../styles/App.module.css";
 
 const DemoAlgorithm = {
   code: `/**
@@ -41,94 +41,45 @@ export default function findAllAverages(arr, k) {
 const DebounceDelay = 600;
 const RuntimeTimeout = 2000;
 
-function areParamsDifferent(params, inputs) {
-  if (params.length !== inputs.length) {
-    return true;
-  }
-  return params.some((param, index) => {
-    const match = inputs[index];
-    return !match || match[0] !== param;
-  });
-}
-
 function App() {
   const [loading, setLoading] = React.useState(true);
-  const [processing, setProcessing] = React.useState(false);
-  const [text, setText] = React.useState(DemoAlgorithm.code);
-  const [debouncedText] = useDebounce(text, DebounceDelay);
-  const [results, setResults] = React.useState(null);
+  const [code, setCode] = React.useState(DemoAlgorithm.code);
   const [activeIndex, setActiveIndex] = React.useState(0);
-  const [inputs, setInputs] = React.useState(DemoAlgorithm.inputs);
-
-  React.useEffect(() => {
-    setProcessing(true);
-    const worker = new Runner();
-
-    const timeout = setTimeout(() => {
-      console.error(`Timed out while running algorithm`);
-      worker.terminate();
-      setProcessing(false);
-    }, RuntimeTimeout);
-
-    worker.addEventListener("message", (evt) => {
-      clearTimeout(timeout);
-
-      if (areParamsDifferent(evt.data.params, inputs)) {
-        setInputs(
-          evt.data.params.map((param, index) => {
-            const prevParam = inputs[index];
-            if (prevParam) {
-              return [param, prevParam[1]];
-            }
-            return [param, undefined];
-          })
-        );
-      }
-      setResults(evt.data);
-      setActiveIndex(0);
-
-      worker.terminate();
-      setProcessing(false);
-    });
-
-    worker.addEventListener("error", (evt) => {
-      clearTimeout(timeout);
-      setProcessing(false);
-    });
-
-    worker.postMessage({
-      code: debouncedText,
-      inputs: inputs.map((input) => input[1]),
-    });
-
-    return () => {
-      worker.terminate();
-      clearTimeout(timeout);
-    };
-  }, [debouncedText, inputs]);
+  const options = React.useMemo(
+    () => ({
+      timeout: RuntimeTimeout,
+      onComplete: () => setActiveIndex(0),
+    }),
+    []
+  );
+  const { isProcessing, snapshots, inputs, actions } = useCode(
+    code,
+    DemoAlgorithm.inputs,
+    options
+  );
 
   const handleInputChange = (evt) => {
     const newInputs = [...inputs];
     const inputValue = newInputs.find(([name]) => name === evt.target.name);
     if (inputValue) {
       inputValue[1] = JSON.parse(evt.target.value);
-      setInputs(newInputs);
+      actions.setInputs(newInputs);
     }
   };
 
-  const snapshots = results && results.snapshots;
   return (
     <main className={styles.main}>
       <Overlay show={loading} initial={{ opacity: 1 }} />
       <section className={styles.editor}>
-        <Editor
-          onChange={(code) => setText(code)}
-          value={text}
+        <DebouncedEditor
+          initialValue={code}
+          delay={DebounceDelay}
+          onChange={(newCode) => setCode(newCode)}
           onMount={() => setLoading(false)}
         />
       </section>
       <section className={styles.visualizer}>
-        <Overlay show={processing && !loading} className="bg-opacity-60" />
+        <Overlay show={isProcessing && !loading} className="bg-opacity-60" />
         {snapshots && snapshots.length ? (
           <>
             <Variables
