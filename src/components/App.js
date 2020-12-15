@@ -7,16 +7,17 @@ import Overlay from "./Overlay";
 import Runner from "../lib/runner.worker";
 import styles from "../styles/App.module.css";
 
-const initialText = `/**
+const DemoAlgorithm = {
+  code: `/**
  * Export default a function with a debugger statement and 
  * watch it run on the right :)
  */ 
-
+ 
 export default function findAllAverages(arr, k) {
   const result = [];
   let windowStart = 0;
   let windowSum = 0;
-
+ 
   for (let windowEnd = 0; windowEnd < arr.length; windowEnd++) {
     windowSum += arr[windowEnd];
     debugger;
@@ -26,24 +27,38 @@ export default function findAllAverages(arr, k) {
       windowStart++;
     }
   }
-
+ 
   debugger;
   return result;
 }
-`;
-
-const inputs = [[1, 3, 2, 6, -1, 4, 1, 8, 2], 3];
+`,
+  inputs: [
+    ["arr", [1, 3, 2, 6, -1, 4, 1, 8, 2]],
+    ["k", 3],
+  ],
+};
 
 const DebounceDelay = 600;
 const RuntimeTimeout = 2000;
 
+function areParamsDifferent(params, inputs) {
+  if (params.length !== inputs.length) {
+    return true;
+  }
+  return params.some((param, index) => {
+    const match = inputs[index];
+    return !match || match[0] !== param;
+  });
+}
+
 function App() {
   const [loading, setLoading] = React.useState(true);
   const [processing, setProcessing] = React.useState(false);
-  const [text, setText] = React.useState(initialText);
+  const [text, setText] = React.useState(DemoAlgorithm.code);
   const [debouncedText] = useDebounce(text, DebounceDelay);
   const [results, setResults] = React.useState(null);
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [inputs, setInputs] = React.useState(DemoAlgorithm.inputs);
 
   React.useEffect(() => {
     setProcessing(true);
@@ -57,7 +72,21 @@ function App() {
 
     worker.addEventListener("message", (evt) => {
       clearTimeout(timeout);
+
+      if (areParamsDifferent(evt.data.params, inputs)) {
+        setInputs(
+          evt.data.params.map((param, index) => {
+            const prevParam = inputs[index];
+            if (prevParam) {
+              return [param, prevParam[1]];
+            }
+            return [param, undefined];
+          })
+        );
+      }
       setResults(evt.data);
+      setActiveIndex(0);
+
       worker.terminate();
       setProcessing(false);
     });
@@ -67,13 +96,25 @@ function App() {
       setProcessing(false);
     });
 
-    worker.postMessage({ code: debouncedText, inputs });
+    worker.postMessage({
+      code: debouncedText,
+      inputs: inputs.map((input) => input[1]),
+    });
 
     return () => {
       worker.terminate();
       clearTimeout(timeout);
     };
-  }, [debouncedText]);
+  }, [debouncedText, inputs]);
+
+  const handleInputChange = (evt) => {
+    const newInputs = [...inputs];
+    const inputValue = newInputs.find(([name]) => name === evt.target.name);
+    if (inputValue) {
+      inputValue[1] = JSON.parse(evt.target.value);
+      setInputs(newInputs);
+    }
+  };
 
   const snapshots = results && results.snapshots;
   return (
@@ -94,24 +135,22 @@ function App() {
               vars={snapshots[activeIndex]}
               prev={snapshots[activeIndex - 1]}
             />
-            <form className={styles.arguments}>
-              <label style={{ flex: 1 }} className="mr-2">
-                <input
-                  className="w-full p-2 rounded-md"
-                  type="text"
-                  value={JSON.stringify(inputs[0])}
-                />
-                <span className="block text-white">arr</span>
-              </label>
-              <label style={{ flex: 1 }} className="ml-2">
-                <input
-                  className="w-full p-2 rounded-md"
-                  type="text"
-                  value={JSON.stringify(inputs[1])}
-                />
-                <span className="block text-white">k</span>
-              </label>
-            </form>
+            {inputs.length && (
+              <form className={styles.arguments}>
+                {inputs.map(([name, value]) => (
+                  <label key={name} style={{ flex: 1 }} className="mr-2">
+                    <input
+                      name={name}
+                      className="w-full p-2 rounded-md"
+                      type="text"
+                      defaultValue={JSON.stringify(value)}
+                      onBlur={handleInputChange}
+                    />
+                    <span className="block text-white">{name}</span>
+                  </label>
+                ))}
+              </form>
+            )}
             <div className={styles.controls}>
               <button
                 className={styles.button}
