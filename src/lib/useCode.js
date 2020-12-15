@@ -5,6 +5,7 @@ const defaultOptions = {
   timeout: 2000,
   onComplete: () => {},
   onError: () => {},
+  onStart: () => {},
 };
 
 export default function useCode(code, initialInputs, opts = {}) {
@@ -15,6 +16,7 @@ export default function useCode(code, initialInputs, opts = {}) {
   React.useEffect(() => {
     const options = { ...defaultOptions, ...opts };
 
+    options.onStart();
     setProcessing(true);
     const worker = new Runner();
 
@@ -23,9 +25,9 @@ export default function useCode(code, initialInputs, opts = {}) {
      * through, we know the algorithm took too long to run.
      */
     const timeout = setTimeout(() => {
-      console.error(`Timed out while running algorithm`);
       worker.terminate();
       setProcessing(false);
+      options.onError(new Error(`Timed out while running algorithm`));
     }, options.timeout);
 
     /**

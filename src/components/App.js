@@ -2,9 +2,11 @@ import React from "react";
 
 import useCode from "../lib/useCode";
 
-import Variables from "./Variables";
 import DebouncedEditor from "./DebouncedEditor";
+import ErrorPopup from "./ErrorPopup";
+import InputForm from "./InputForm";
 import Overlay from "./Overlay";
+import Variables from "./Variables";
 import styles from "./styles/App.module.css";
 
 const DemoAlgorithm = {
@@ -45,10 +47,13 @@ function App() {
   const [loading, setLoading] = React.useState(true);
   const [code, setCode] = React.useState(DemoAlgorithm.code);
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [error, setError] = React.useState(null);
   const options = React.useMemo(
     () => ({
       timeout: RuntimeTimeout,
+      onStart: () => setError(null),
       onComplete: () => setActiveIndex(0),
+      onError: ({ message }) => setError(message),
     }),
     []
   );
@@ -57,15 +62,6 @@ function App() {
     DemoAlgorithm.inputs,
     options
   );
-
-  const handleInputChange = (evt) => {
-    const newInputs = [...inputs];
-    const inputValue = newInputs.find(([name]) => name === evt.target.name);
-    if (inputValue) {
-      inputValue[1] = JSON.parse(evt.target.value);
-      actions.setInputs(newInputs);
-    }
-  };
 
   return (
     <main className={styles.main}>
@@ -86,21 +82,13 @@ function App() {
               vars={snapshots[activeIndex]}
               prev={snapshots[activeIndex - 1]}
             />
+            <ErrorPopup error={error} className={styles.error} />
             {inputs.length && (
-              <form className={styles.arguments}>
-                {inputs.map(([name, value]) => (
-                  <label key={name} style={{ flex: 1 }} className="mr-2">
-                    <input
-                      name={name}
-                      className="w-full p-2 rounded-md"
-                      type="text"
-                      defaultValue={JSON.stringify(value)}
-                      onBlur={handleInputChange}
-                    />
-                    <span className="block text-white">{name}</span>
-                  </label>
-                ))}
-              </form>
+              <InputForm
+                className={styles.arguments}
+                inputs={inputs}
+                onSubmit={actions.setInputs}
+              />
             )}
             <div className={styles.controls}>
               <button

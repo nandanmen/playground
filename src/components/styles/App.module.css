@@ -23,6 +23,11 @@
 }
 
 .arguments {
-  @apply absolute px-8 font-mono text-black flex w-full;
+  @apply absolute w-full;
   top: 2rem;
+}
+
+.error {
+  @apply fixed top-32;
+  white-space: pre;
 }
