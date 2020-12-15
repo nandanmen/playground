@@ -1,11 +1,11 @@
 import React from "react";
 
 import useCode from "../lib/useCode";
-import styles from "../styles/App.module.css";
 
 import Variables from "./Variables";
 import DebouncedEditor from "./DebouncedEditor";
 import Overlay from "./Overlay";
+import styles from "./styles/App.module.css";
 
 const DemoAlgorithm = {
   code: `/**
