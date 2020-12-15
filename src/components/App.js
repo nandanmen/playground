@@ -5,6 +5,7 @@ import useCode from "../lib/useCode";
 import Variables from "./Variables";
 import DebouncedEditor from "./DebouncedEditor";
 import Overlay from "./Overlay";
+import ErrorPopup from "./ErrorPopup";
 import styles from "./styles/App.module.css";
 
 const DemoAlgorithm = {
@@ -45,10 +46,13 @@ function App() {
   const [loading, setLoading] = React.useState(true);
   const [code, setCode] = React.useState(DemoAlgorithm.code);
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [error, setError] = React.useState(null);
   const options = React.useMemo(
     () => ({
       timeout: RuntimeTimeout,
+      onStart: () => setError(null),
       onComplete: () => setActiveIndex(0),
+      onError: ({ message }) => setError(message),
     }),
     []
   );
@@ -86,6 +90,7 @@ function App() {
               vars={snapshots[activeIndex]}
               prev={snapshots[activeIndex - 1]}
             />
+            <ErrorPopup error={error} style={{ top: "8rem" }} />
             {inputs.length && (
               <form className={styles.arguments}>
                 {inputs.map(([name, value]) => (
