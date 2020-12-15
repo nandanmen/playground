@@ -1,0 +1,12 @@
+.form {
+  @apply px-8 font-mono flex justify-between;
+}
+
+.field {
+  @apply mx-1 relative;
+  flex: 1;
+}
+
+.submit {
+  @apply absolute right-9 top-full bg-gray-700 font-semibold px-4 py-2 rounded-lg;
+}
