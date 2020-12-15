@@ -85,6 +85,7 @@ function App() {
         );
       }
       setResults(evt.data);
+      setActiveIndex(0);
 
       worker.terminate();
       setProcessing(false);
