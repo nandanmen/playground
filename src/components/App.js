@@ -79,6 +79,7 @@ function App() {
         {snapshots && snapshots.length ? (
           <>
             <Variables
+              params={inputs.map((input) => input[0])}
               vars={snapshots[activeIndex]}
               prev={snapshots[activeIndex - 1]}
             />
