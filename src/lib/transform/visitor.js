@@ -6,13 +6,6 @@ export default function transformFactory({ types: t }) {
   return {
     visitor: {
       Program(path) {
-        /**
-         * const __snap = require("snapshot");
-         * const __snapshots = __snap.createSnapshot();
-         */
-        path.node.body.unshift(createSnapshotInitialization(t));
-        path.node.body.unshift(createSnapshotImport(t));
-
         const visitor = {
           ExportDefaultDeclaration(path) {
             const { declaration } = path.node;
@@ -128,7 +121,7 @@ function buildMetadata(t, program, data) {
       )
     )
   );
-  program.body.push(t.identifier("__meta"));
+  program.body.push(t.returnStatement(meta));
 }
 
 function createVariable(t, id, init) {
@@ -161,27 +154,4 @@ function createObjectExpression(t, entries) {
       t.objectProperty(t.identifier(key), t.identifier(val))
     )
   );
-}
-
-function createSnapshotImport(t) {
-  /* const __snap = require("snapshot") */
-  return t.variableDeclaration("const", [
-    t.variableDeclarator(
-      t.identifier("__snap"),
-      t.callExpression(t.identifier("require"), [t.stringLiteral("snapshot")])
-    ),
-  ]);
-}
-
-function createSnapshotInitialization(t) {
-  /* const __snapshots = __snap.createSnapshot() */
-  return t.variableDeclaration("const", [
-    t.variableDeclarator(
-      t.identifier(SNAPSHOT),
-      t.callExpression(
-        t.memberExpression(t.identifier("__snap"), t.identifier("createSnapshot")),
-        []
-      )
-    ),
-  ]);
 }
