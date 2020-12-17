@@ -11,7 +11,13 @@ export default function transformFactory({ types: t }) {
             const { declaration } = path.node;
 
             // Only allow function default exports
-            t.assertFunctionDeclaration(declaration);
+            try {
+              t.assertFunctionDeclaration(declaration);
+            } catch {
+              throw new Error(
+                `Default export isn't a function. Make sure you're only default exporting functions.`
+              );
+            }
             const funcName = declaration.id?.name;
 
             /**
@@ -70,6 +76,12 @@ export default function transformFactory({ types: t }) {
         };
 
         path.traverse(visitor, { declared: new Set(), inferredData });
+
+        if (typeof inferredData.entryPoint !== "string") {
+          throw new Error(
+            `Couldn't find an entry point. Did you forget to default export a function?`
+          );
+        }
 
         buildMetadata(t, path.node, inferredData);
       },
