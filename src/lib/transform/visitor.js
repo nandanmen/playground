@@ -6,19 +6,18 @@ export default function transformFactory({ types: t }) {
   return {
     visitor: {
       Program(path) {
-        /**
-         * const __snap = require("snapshot");
-         * const __snapshots = __snap.createSnapshot();
-         */
-        path.node.body.unshift(createSnapshotInitialization(t));
-        path.node.body.unshift(createSnapshotImport(t));
-
         const visitor = {
           ExportDefaultDeclaration(path) {
             const { declaration } = path.node;
 
             // Only allow function default exports
-            t.assertFunctionDeclaration(declaration);
+            try {
+              t.assertFunctionDeclaration(declaration);
+            } catch {
+              throw new Error(
+                `Default export isn't a function. Make sure you're only default exporting functions.`
+              );
+            }
             const funcName = declaration.id?.name;
 
             /**
@@ -78,6 +77,12 @@ export default function transformFactory({ types: t }) {
 
         path.traverse(visitor, { declared: new Set(), inferredData });
 
+        if (typeof inferredData.entryPoint !== "string") {
+          throw new Error(
+            `Couldn't find an entry point. Did you forget to default export a function?`
+          );
+        }
+
         buildMetadata(t, path.node, inferredData);
       },
     },
@@ -128,7 +133,7 @@ function buildMetadata(t, program, data) {
       )
     )
   );
-  program.body.push(t.identifier("__meta"));
+  program.body.push(t.returnStatement(meta));
 }
 
 function createVariable(t, id, init) {
@@ -161,27 +166,4 @@ function createObjectExpression(t, entries) {
       t.objectProperty(t.identifier(key), t.identifier(val))
     )
   );
-}
-
-function createSnapshotImport(t) {
-  /* const __snap = require("snapshot") */
-  return t.variableDeclaration("const", [
-    t.variableDeclarator(
-      t.identifier("__snap"),
-      t.callExpression(t.identifier("require"), [t.stringLiteral("snapshot")])
-    ),
-  ]);
-}
-
-function createSnapshotInitialization(t) {
-  /* const __snapshots = __snap.createSnapshot() */
-  return t.variableDeclaration("const", [
-    t.variableDeclarator(
-      t.identifier(SNAPSHOT),
-      t.callExpression(
-        t.memberExpression(t.identifier("__snap"), t.identifier("createSnapshot")),
-        []
-      )
-    ),
-  ]);
 }
