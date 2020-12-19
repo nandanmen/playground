@@ -1,0 +1,9 @@
+.pair {
+  @apply grid gap-2 w-full mb-2 break-words;
+  grid-template-columns: 1fr minmax(0, 2fr);
+}
+
+.return {
+  @apply grid;
+  grid-template-columns: minmax(0, 1fr);
+}
