@@ -6,42 +6,49 @@ export default function transformFactory({ types: t }) {
   return {
     visitor: {
       Program(path) {
+        const defaultExport = path.node.body.find((statement) =>
+          t.isExportDefaultDeclaration(statement)
+        );
+        assertDefaultExportExists(defaultExport);
+
+        const inferredData = checkAndGetEntryPoint(t, path, defaultExport);
+        if (inferredData.type === "Identifier") {
+          const declaration = checkAndGetEntryDeclaration(
+            t,
+            path.node,
+            inferredData.entryPoint
+          );
+          inferredData.params = getFunctionParams(t, declaration);
+        }
+
         const visitor = {
+          /**
+           * We've already analyzed the entry point here, so we're only updating the
+           * AST i.e. removing the node if it's an identifier, or updating it to a
+           * variable declaration otherwise.
+           */
           ExportDefaultDeclaration(path) {
             const { declaration } = path.node;
-
-            // Only allow function default exports
-            try {
-              t.assertFunctionDeclaration(declaration);
-            } catch {
-              throw new Error(
-                `Default export isn't a function. Make sure you're only default exporting functions.`
+            /**
+             * If we're default exporting a variable name, remove the default export
+             * altogether so we don't have duplicate bindings. Otherwise, replace it
+             * with a VariableDeclaration.
+             */
+            if (t.isIdentifier(declaration)) {
+              path.remove();
+            } else {
+              let expression = declaration;
+              if (t.isFunctionDeclaration(declaration)) {
+                expression = t.functionExpression(
+                  declaration.id,
+                  declaration.params,
+                  declaration.body
+                );
+              }
+              path.replaceWith(
+                createVariable(t, t.identifier(inferredData.entryPoint), expression)
               );
             }
-            const funcName = declaration.id?.name;
-
-            /**
-             * Set this function as the entry point of the script. We're going to
-             * return everything in `inferredData` later so the app can use them.
-             */
-            this.inferredData.entryPoint = funcName;
-
-            declaration.params.forEach((param) => {
-              /**
-               * For the entry point, only support identifiers as parameters right
-               * now i.e. not things like ({ a, b }) => {} or (a, ...rest) => {}.
-               *
-               * There's various edge cases with these expressions related to
-               * putting in custom inputs, so we're leaving them out for simplicity.
-               */
-              t.assertIdentifier(param);
-              this.inferredData.params.push(param.name);
-            });
-
-            /**
-             * Finally, remove the `export default` so it can be used with eval.
-             */
-            path.replaceWith(path.node.declaration);
           },
           FunctionDeclaration(path) {
             /**
@@ -70,18 +77,7 @@ export default function transformFactory({ types: t }) {
           },
         };
 
-        const inferredData = {
-          params: [],
-          entryPoint: null,
-        };
-
-        path.traverse(visitor, { declared: new Set(), inferredData });
-
-        if (typeof inferredData.entryPoint !== "string") {
-          throw new Error(
-            `Couldn't find an entry point. Did you forget to default export a function?`
-          );
-        }
+        path.traverse(visitor, { declared: new Set() });
 
         buildMetadata(t, path.node, inferredData);
       },
@@ -90,6 +86,79 @@ export default function transformFactory({ types: t }) {
 }
 
 // Helpers
+
+function checkAndGetEntryDeclaration(t, program, entryPoint) {
+  const declarations = program.body.filter((node) => t.isVariableDeclaration(node));
+  for (const declaration of declarations) {
+    const match = declaration.declarations.find(
+      (node) => node.id.name === entryPoint
+    );
+    if (match) {
+      if (declaration.kind !== "const") {
+        throw new Error(
+          `Sorry, we currently don't allow for '${declaration.kind}' default exports. Please change your '${declaration.kind}' declaration to a 'const'.`
+        );
+      }
+
+      if (
+        !t.isFunctionExpression(match.init) &&
+        !t.isArrowFunctionExpression(match.init)
+      ) {
+        throw new Error(
+          `Default export isn't a function. Make sure you're only default exporting functions.`
+        );
+      }
+
+      return match.init;
+    }
+  }
+}
+
+function assertDefaultExportExists(defaultExport) {
+  if (!defaultExport) {
+    throw new Error(
+      `Couldn't find an entry point. Did you forget to default export a function?`
+    );
+  }
+}
+
+function checkAndGetEntryPoint(t, path, { declaration }) {
+  if (
+    !t.isIdentifier(declaration) &&
+    !t.isFunctionDeclaration(declaration) &&
+    !t.isArrowFunctionExpression(declaration)
+  ) {
+    throw new Error(
+      `Default export isn't a function. Make sure you're only default exporting functions.`
+    );
+  }
+
+  let entryPoint = null;
+  let params = [];
+  let type = null;
+  if (t.isIdentifier(declaration)) {
+    entryPoint = declaration.name;
+    type = "Identifier";
+  } else if (t.isFunctionDeclaration(declaration)) {
+    entryPoint = declaration.id?.name;
+    type = "FunctionDeclaration";
+  } else {
+    type = "ArrowFunctionExpression";
+  }
+
+  if (!t.isIdentifier(declaration)) {
+    params = getFunctionParams(t, declaration);
+  }
+
+  if (!entryPoint) {
+    entryPoint = path.scope.generateUidIdentifier("entryPoint").name;
+  }
+  return { type, entryPoint, params };
+}
+
+function getFunctionParams(t, func) {
+  return func.params.flatMap((node) => getNames(t, node));
+}
 
 function getNames(t, node) {
   if (t.isIdentifier(node)) {

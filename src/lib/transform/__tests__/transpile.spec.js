@@ -40,4 +40,43 @@ describe("transpile", () => {
       `Default export isn't a function. Make sure you're only default exporting functions.`
     );
   });
+
+  it("should throw an error if alias of default export is not a function", () => {
+    const code = `
+      const arr = [1, 2, 3]
+      export default arr
+    `;
+    expect(() => transpile(code)).toThrow(
+      `Default export isn't a function. Make sure you're only default exporting functions.`
+    );
+  });
+
+  it("should work with constant default exports", () => {
+    const code = `
+      const sum = function sum(a, b) {}
+      export default sum
+    `;
+    const { entryPoint, params } = transpile(code);
+    expect(entryPoint.name).toEqual("sum");
+    expect(params).toEqual(["a", "b"]);
+  });
+
+  it("should not work with mutable default exports", () => {
+    const code = `
+      let sum = function sum(a, b) {}
+      export default sum
+    `;
+    expect(() => transpile(code)).toThrow(
+      `Sorry, we currently don't allow for 'let' default exports. Please change your 'let' declaration to a 'const'.`
+    );
+  });
+
+  it("should work with anonymous functions", () => {
+    const code = `
+      export default (a, b) => {}
+    `;
+    const { entryPoint, params } = transpile(code);
+    expect(typeof entryPoint).toBe("function");
+    expect(params).toEqual(["a", "b"]);
+  });
 });
