@@ -51,14 +51,19 @@ export default function transformFactory({ types: t }) {
             }
           },
           FunctionDeclaration(path) {
-            /**
-             * Declare all function parameters so they're not skipped by the
-             * snapshotting function.
-             */
-            path.node.params.forEach((param) => {
-              const names = getNames(t, param);
-              names.forEach((name) => this.declared.add(name));
-            });
+            getFunctionParams(t, path.node).forEach((name) =>
+              this.declared.add(name)
+            );
+          },
+          ArrowFunctionExpression(path) {
+            getFunctionParams(t, path.node).forEach((name) =>
+              this.declared.add(name)
+            );
+          },
+          FunctionExpression(path) {
+            getFunctionParams(t, path.node).forEach((name) =>
+              this.declared.add(name)
+            );
           },
           DebuggerStatement(path) {
             const scope = Object.keys(path.scope.getAllBindings()).filter((name) =>

@@ -6,7 +6,11 @@ self.addEventListener("message", (evt) => {
   const { entryPoint, snapshots, params } = transpile(code);
   postMessage({
     returnValue: entryPoint(...inputs),
-    snapshots: snapshots.data,
+    snapshots: snapshots.data.map((snapshot) => {
+      return Object.fromEntries(
+        Object.entries(snapshot).filter(([, val]) => typeof val !== "function")
+      );
+    }),
     params,
   });
 });
